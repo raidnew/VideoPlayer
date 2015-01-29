@@ -6,6 +6,7 @@
  * To change this template use File | Settings | File Templates.
  */
 package Data {
+
 import com.adobe.serialization.json.JSON;
 
 public class VideoData {

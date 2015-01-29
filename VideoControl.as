@@ -42,47 +42,50 @@ public class VideoControl implements IVideoControl{
     }
 
     public function init():void{
+        _container = new Sprite();
+
         _currentTime = 0;
         _totalDuration = 0;
-        _playBtn = new Sprite();
+
         _progressBar = new VideoProgressBar();
-        _progressBar.y = 300;
+        _progressBar.y = 280;
+        _progressBar.x = 50;
 
         _volumeControl = new VolumeControl();
-        _volumeControl.y = 300;
-        _volumeControl.x = 450;
+        _volumeControl.y = 100;
+        _volumeControl.x = 340;
 
         _rotationScreen = new VolumeControl();
-        _rotationScreen.y = 300;
-        _rotationScreen.x = 480;
+        _rotationScreen.y = 280;
+        _rotationScreen.x = 450;
 
         _progressBar.addEventListener(VideoHudEvent.REWIND, _onRewindHandler)
         _volumeControl.addEventListener(VideoHudEvent.VOLUME, _onVolumeHandler)
         _rotationScreen.addEventListener(VideoHudEvent.VOLUME, _onRotationHandler)
-        _container = new Sprite();
 
         _selectResolution = new SelectResolution(setResolution);
-        _selectResolution.y = 340;
+        _selectResolution.y = 40;
+        _selectResolution.x = 380;
 
         _playBtn = new Sprite();
         _playBtn.graphics.beginFill(0xAAFFAA);
-        _playBtn.graphics.drawCircle(0,0,50);
-        _playBtn.x = 450;
-        _playBtn.y = 50;
+        _playBtn.graphics.drawCircle(0,0,20);
+        _playBtn.x = 20;
+        _playBtn.y = 280;
         _playBtn.addEventListener(MouseEvent.CLICK, playClickHandler);
 
         _pauseBtn = new Sprite();
         _pauseBtn.graphics.beginFill(0xFFAAAA);
-        _pauseBtn.graphics.drawCircle(0,0,50);
-        _pauseBtn.x = 450;
-        _pauseBtn.y = 150;
+        _pauseBtn.graphics.drawCircle(0,0,20);
+        _pauseBtn.x = 20;
+        _pauseBtn.y = 280;
         _pauseBtn.addEventListener(MouseEvent.CLICK, pauseClickHandler);
 
         _fullScreenBtn = new Sprite();
         _fullScreenBtn.graphics.beginFill(0x000000);
         _fullScreenBtn.graphics.drawRect(0,0,50,50);
-        _fullScreenBtn.x = 400;
-        _fullScreenBtn.y = 340;
+        _fullScreenBtn.x = 380;
+        _fullScreenBtn.y = 260;
         _fullScreenBtn.addEventListener(MouseEvent.CLICK, fullScreenHandler);
 
         _container.addChild(_volumeControl);
@@ -127,9 +130,13 @@ public class VideoControl implements IVideoControl{
     }
 
     public function pause():void {
+        _pauseBtn.visible = false;
+        _playBtn.visible = true;
     }
 
     public function playing():void {
+        _pauseBtn.visible = true;
+        _playBtn.visible = false;
     }
 
     public function setDuration(value:Number):void {

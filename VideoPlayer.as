@@ -53,7 +53,7 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
         addEventListener(Event.REMOVED_FROM_STAGE, onRemovedFromStage);
     }
 
-    function fullScreenRedraw(event:FullScreenEvent):void
+    public function fullScreenRedraw(event:FullScreenEvent):void
     {
         if (event.fullScreen)
         {
@@ -81,8 +81,13 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
     }
 
     public function pause(value:Boolean):void {
-        if(value) _attachedStram.getStream().pause();
-        else _attachedStram.getStream().resume();
+        if(value){
+            _hud.pause();
+            _attachedStram.getStream().pause();
+        }else{
+            _hud.playing();
+            _attachedStram.getStream().resume();
+        }
         _isPause = value;
     }
 
@@ -112,6 +117,9 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
 
         if(_isPause){
             pause(true);
+            _hud.pause();
+        }else{
+            _hud.playing();
         }
     }
 
@@ -159,7 +167,6 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
 
     public function screenRotation(angle:Number):void {
         _video.rotation = angle;
-
         _container.x = 0;
         _container.y = 0;
 

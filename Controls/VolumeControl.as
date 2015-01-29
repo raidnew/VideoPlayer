@@ -7,6 +7,7 @@
  */
 package Controls {
 import flash.display.Sprite;
+import flash.events.Event;
 import flash.events.MouseEvent;
 import flash.geom.Rectangle;
 
@@ -39,20 +40,35 @@ public class VolumeControl extends Sprite{
         _slider.addEventListener(MouseEvent.MOUSE_DOWN, _sliderMouseDownHandler)
         _slider.addEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
 
+        addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+        addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
+
         //addChild(_background);
         addChild(_volumeBar);
         addChild(_slider);
     }
 
+    private function onRemoveFromStage(event:Event):void {
+        stage.removeEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
+    }
+
+    private function onAddedToStage(event:Event):void {
+        stage.addEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
+    }
+
     private function _sliderMouseUpHandler(event:MouseEvent):void {
-        _slider.stopDrag();
-        _isDragged = false;
-        dispatchEvent(new VideoHudEvent(VideoHudEvent.VOLUME, (SIZE.height - _slider.y) / SIZE.height));
+        if(_isDragged){
+            _slider.stopDrag();
+            _isDragged = false;
+            dispatchEvent(new VideoHudEvent(VideoHudEvent.VOLUME, (SIZE.height - _slider.y) / SIZE.height));
+        }
     }
 
     private function _sliderMouseDownHandler(event:MouseEvent):void {
-        _isDragged = true;
-        _slider.startDrag(false, new Rectangle(0,0,0, SIZE.height))
+        if(!_isDragged){
+            _isDragged = true;
+            _slider.startDrag(false, new Rectangle(0,0,0, SIZE.height))
+        }
     }
 
     public function setVolume(value:Number):void{

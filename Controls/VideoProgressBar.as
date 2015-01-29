@@ -20,7 +20,7 @@ public class VideoProgressBar extends Sprite{
 
     private var _isDragged:Boolean;
 
-    private var SIZE:Rectangle = new Rectangle(0,0,400,60);
+    private var SIZE:Rectangle = new Rectangle(0,0,300,60);
 
     public function VideoProgressBar():void{
         _init();
@@ -53,21 +53,36 @@ public class VideoProgressBar extends Sprite{
         _slider.addEventListener(MouseEvent.MOUSE_DOWN, _sliderMouseDownHandler)
         _slider.addEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
 
+        addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+        addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
+
         //addChild(_background);
         addChild(_totalBar);
         addChild(_bufferBar);
         addChild(_slider);
     }
 
+    private function onRemoveFromStage(event:Event):void {
+        stage.removeEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
+    }
+
+    private function onAddedToStage(event:Event):void {
+        stage.addEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
+    }
+
     private function _sliderMouseUpHandler(event:MouseEvent):void {
-        _slider.stopDrag();
-        _isDragged = false;
-        dispatchEvent(new VideoHudEvent(VideoHudEvent.REWIND, _slider.x / SIZE.width));
+        if(_isDragged){
+            _slider.stopDrag();
+            _isDragged = false;
+            dispatchEvent(new VideoHudEvent(VideoHudEvent.REWIND, _slider.x / SIZE.width));
+        }
     }
 
     private function _sliderMouseDownHandler(event:MouseEvent):void {
-        _isDragged = true;
-        _slider.startDrag(false, new Rectangle(0,0,SIZE.width, 0))
+        if(!_isDragged){
+            _isDragged = true;
+            _slider.startDrag(false, new Rectangle(0,0,SIZE.width, 0))
+        }
     }
 
     public function setProgress(value:Number):void{
