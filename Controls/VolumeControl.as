@@ -39,6 +39,7 @@ public class VolumeControl extends Sprite{
 
         _slider.addEventListener(MouseEvent.MOUSE_DOWN, _sliderMouseDownHandler)
         _slider.addEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
+        _slider.addEventListener(MouseEvent.MOUSE_MOVE, _sliderMouseMoveHandler)
 
         addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
@@ -54,6 +55,12 @@ public class VolumeControl extends Sprite{
 
     private function onAddedToStage(event:Event):void {
         stage.addEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
+    }
+
+    private function _sliderMouseMoveHandler(event:MouseEvent):void {
+        if(_isDragged){
+            dispatchEvent(new VideoHudEvent(VideoHudEvent.VOLUME, (SIZE.height - _slider.y) / SIZE.height));
+        }
     }
 
     private function _sliderMouseUpHandler(event:MouseEvent):void {

@@ -6,11 +6,13 @@
  * To change this template use File | Settings | File Templates.
  */
 package {
+import Controls.SelectResolution;
 import Controls.VideoHudEvent;
 import Controls.VideoProgressBar;
 import Controls.VolumeControl;
 
 import flash.display.Sprite;
+import flash.events.Event;
 import flash.events.MouseEvent;
 import flash.media.Sound;
 import flash.utils.Timer;
@@ -35,6 +37,7 @@ public class VideoControl implements IVideoControl{
     private var _callbackSetResolution:Function;
 
     private var _fullScreenBtn:Sprite;
+    private var _fullscreenMode:Boolean;
 
     public function VideoControl(videoScreen:IVideoPlayer) {
         _screen = videoScreen;
@@ -48,44 +51,30 @@ public class VideoControl implements IVideoControl{
         _totalDuration = 0;
 
         _progressBar = new VideoProgressBar();
-        _progressBar.y = 280;
-        _progressBar.x = 50;
 
         _volumeControl = new VolumeControl();
-        _volumeControl.y = 100;
-        _volumeControl.x = 340;
 
         _rotationScreen = new VolumeControl();
-        _rotationScreen.y = 280;
-        _rotationScreen.x = 450;
 
         _progressBar.addEventListener(VideoHudEvent.REWIND, _onRewindHandler)
         _volumeControl.addEventListener(VideoHudEvent.VOLUME, _onVolumeHandler)
         _rotationScreen.addEventListener(VideoHudEvent.VOLUME, _onRotationHandler)
 
         _selectResolution = new SelectResolution(setResolution);
-        _selectResolution.y = 40;
-        _selectResolution.x = 380;
 
         _playBtn = new Sprite();
         _playBtn.graphics.beginFill(0xAAFFAA);
         _playBtn.graphics.drawCircle(0,0,20);
-        _playBtn.x = 20;
-        _playBtn.y = 280;
         _playBtn.addEventListener(MouseEvent.CLICK, playClickHandler);
 
         _pauseBtn = new Sprite();
         _pauseBtn.graphics.beginFill(0xFFAAAA);
         _pauseBtn.graphics.drawCircle(0,0,20);
-        _pauseBtn.x = 20;
-        _pauseBtn.y = 280;
         _pauseBtn.addEventListener(MouseEvent.CLICK, pauseClickHandler);
 
         _fullScreenBtn = new Sprite();
         _fullScreenBtn.graphics.beginFill(0x000000);
         _fullScreenBtn.graphics.drawRect(0,0,50,50);
-        _fullScreenBtn.x = 380;
-        _fullScreenBtn.y = 260;
         _fullScreenBtn.addEventListener(MouseEvent.CLICK, fullScreenHandler);
 
         _container.addChild(_volumeControl);
@@ -96,7 +85,47 @@ public class VideoControl implements IVideoControl{
         _container.addChild(_pauseBtn);
         _container.addChild(_fullScreenBtn);
 
+        _container.addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
+        _container.addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
 
+    }
+
+    private function onRemoveFromStage(event:Event):void {
+        _container.stage.removeEventListener(Event.RESIZE, _onStageResize);
+    }
+
+    private function onAddedToStage(event:Event):void {
+        _container.stage.addEventListener(Event.RESIZE, _onStageResize);
+        alignControls();
+    }
+
+    private function _onStageResize(event:Event):void {
+        alignControls();
+    }
+
+    private function alignControls():void {
+
+        var width:int = _container.stage.stageWidth;
+        var height:int = _container.stage.stageHeight;
+
+        _playBtn.x = _pauseBtn.x = 30;
+        _playBtn.y = _pauseBtn.y = height - 40;
+
+        _progressBar.width = width - 300;
+        _progressBar.x = _playBtn.x + _playBtn.width ;
+        _progressBar.y = height - 40;
+
+        _fullScreenBtn.x = _progressBar.x + _progressBar.width + 10;
+        _fullScreenBtn.y = height - 60;
+
+        _selectResolution.x = _fullScreenBtn.x + _fullScreenBtn.width + 10;
+        _selectResolution.y = height - _selectResolution.height;
+
+        _volumeControl.x = _selectResolution.x + _selectResolution.width + 10;
+        _volumeControl.y = height - _volumeControl.height;
+
+        _rotationScreen.x = _volumeControl.x + _volumeControl.width + 10;
+        _rotationScreen.y = height - _rotationScreen.height;
     }
 
     private function _onRotationHandler(event:VideoHudEvent):void {
@@ -104,7 +133,7 @@ public class VideoControl implements IVideoControl{
     }
 
     private function fullScreenHandler(event:MouseEvent):void {
-        _screen.fullScreen(true);
+        _screen.fullScreen(_fullscreenMode?false:true);
     }
 
     private function playClickHandler(event:MouseEvent):void {
@@ -152,6 +181,10 @@ public class VideoControl implements IVideoControl{
         _progressBar.setBuffered(value);
     }
 
+    public function setFullScreen(value:Boolean):void {
+        _fullscreenMode = value;
+    }
+
     public function getInterface():Sprite {
         return _container;
     }
@@ -171,5 +204,9 @@ public class VideoControl implements IVideoControl{
     public function setVolume(value:Number):void{
         _volumeControl.setVolume(value);
     }
+
+    public function finish():void {
+    }
+
 }
 }

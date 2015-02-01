@@ -9,7 +9,6 @@ package Controls {
 import flash.display.Sprite;
 import flash.events.Event;
 import flash.events.MouseEvent;
-import flash.events.ProgressEvent;
 import flash.geom.Rectangle;
 
 public class VideoProgressBar extends Sprite{
@@ -38,20 +37,10 @@ public class VideoProgressBar extends Sprite{
         _background.graphics.endFill();
          */
 
-        _totalBar.graphics.beginFill(0xBB9999);
-        _totalBar.graphics.drawRect(SIZE.x,  SIZE.y,  SIZE.width, 10);
-        _totalBar.graphics.endFill();
-
-        _bufferBar.graphics.beginFill(0x99BB99)
-        _bufferBar.graphics.drawRect(SIZE.x,  SIZE.y,  SIZE.width, 10);
-        _bufferBar.graphics.endFill();
-
-        _slider.graphics.beginFill(0x7777FF);
-        _slider.graphics.drawCircle(0,0,10);
-        _slider.graphics.endFill();
-
         _slider.addEventListener(MouseEvent.MOUSE_DOWN, _sliderMouseDownHandler)
         _slider.addEventListener(MouseEvent.MOUSE_UP, _sliderMouseUpHandler)
+
+        _totalBar.addEventListener(MouseEvent.CLICK, _barClickHandler)
 
         addEventListener(Event.ADDED_TO_STAGE, onAddedToStage);
         addEventListener(Event.REMOVED_FROM_STAGE, onRemoveFromStage);
@@ -60,6 +49,33 @@ public class VideoProgressBar extends Sprite{
         addChild(_totalBar);
         addChild(_bufferBar);
         addChild(_slider);
+
+        drawbar();
+    }
+
+    private function drawbar():void{
+
+        _totalBar.graphics.clear();
+        _bufferBar.graphics.clear();
+        _slider.graphics.clear();
+
+        _totalBar.graphics.beginFill(0xBB9999);
+        _totalBar.graphics.drawRect(SIZE.x,  SIZE.y,  SIZE.width, 10);
+        _totalBar.graphics.endFill();
+
+        _bufferBar.graphics.beginFill(0x99BB99)
+        _bufferBar.graphics.drawRect(SIZE.x,  SIZE.y,  SIZE.width, 10);
+        _bufferBar.graphics.endFill();
+
+        _bufferBar.mouseEnabled = false;
+
+        _slider.graphics.beginFill(0x7777FF);
+        _slider.graphics.drawCircle(0,0,10);
+        _slider.graphics.endFill();
+    }
+
+    private function _barClickHandler(event:MouseEvent):void {
+        dispatchEvent(new VideoHudEvent(VideoHudEvent.REWIND, event.localX/SIZE.width));
     }
 
     private function onRemoveFromStage(event:Event):void {
@@ -93,6 +109,22 @@ public class VideoProgressBar extends Sprite{
 
     public function setBuffered(value:Number):void {
         _bufferBar.width = SIZE.width * value;
+    }
+
+    override public function set width(value:Number):void {
+        //super.width = value;
+
+        if(value < 20) value = 20;
+
+        var tempSliderPos:Number = _slider.x/width;
+        var tempBufferSizePos:Number = _slider.x/width;
+
+        SIZE.width = value;
+
+        drawbar();
+
+        setBuffered(tempBufferSizePos);
+        setProgress(tempSliderPos);
     }
 }
 }

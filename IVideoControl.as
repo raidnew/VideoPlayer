@@ -20,10 +20,13 @@ public interface IVideoControl {
     function setProgress(value:Number):void;
     function setBuffered(buffered:Number):void;
     function setVolume(value:Number):void;
+    function setFullScreen(value:Boolean):void;
 
     function getInterface():Sprite;
 
     function setAvalibleResolurion(resArray:Array):void;
     function setCallbackOnSetResolution(setResolution:Function):void;
+
+    function finish():void;
 }
 }

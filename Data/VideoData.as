@@ -33,12 +33,8 @@ public class VideoData {
         for(var i:int = 0;i<data.length;i++){
             var char:String = data.charAt(i);
 
-            //trace(data.charCodeAt(i)+"->"+data.charAt(i)+"<");
-
-            if(!quotesOpened){
-                if(char == "{" || char == ","){
-                    newPair = true;
-                }
+            if(char == "{" || char == ","){
+                newPair = true;
             }
 
             if((data.charCodeAt(i) == 32 || data.charCodeAt(i) == 13 || data.charCodeAt(i) == 10 || data.charAt(i) == " " || data.charAt(i) == ":") && quotesAdding){
@@ -58,9 +54,6 @@ public class VideoData {
                 fixedStr += data.charAt(i);
             }
         }
-
-        trace(data);
-        trace(fixedStr);
 
         return fixedStr;
     }

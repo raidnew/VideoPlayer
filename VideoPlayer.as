@@ -17,6 +17,8 @@ import flash.events.NetStatusEvent;
 import flash.events.SecurityErrorEvent;
 import flash.events.TimerEvent;
 import flash.geom.Rectangle;
+import flash.geom.Rectangle;
+import flash.geom.Rectangle;
 import flash.media.Video;
 import flash.net.NetConnection;
 import flash.net.NetStream;
@@ -28,7 +30,6 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
     private var _netConnection:NetConnection;
 
     private var _container:Sprite;
-    private var _videoURL:String;
     private var _video:Video;
     private var _hud:IVideoControl;
     private var _attachedStram:VideoStream;
@@ -39,9 +40,12 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
 
     private var _isPause:Boolean;
 
+    private var _currentVideoSize:Rectangle;
+
     public function VideoPlayer() {
         _container = new Sprite();
         _video = new Video();
+        _currentVideoSize = new Rectangle();
         addChild(_container);
         _container.addChild(_video);
         _hud = new VideoControl(this);
@@ -57,22 +61,47 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
     {
         if (event.fullScreen)
         {
-            _video.width = stage.stageWidth;
-            _video.height = stage.stageHeight;
+            _hud.setFullScreen(true);
         }
         else
         {
-            _video.width = 320;
-            _video.height = 240;
+            _hud.setFullScreen(false);
+        }
+    }
+
+    private function setVideoSize(newWidth:int, newHeight:int):void {
+        var _streamSize:Rectangle = _attachedStram.getScreenSize();
+
+        if(_streamSize != null && stage != null){
+            var prop:Number = _streamSize.width/_streamSize.height;
+            _video.width = newWidth;
+            _video.height = newWidth/prop;
+            if(_video.height > newHeight){
+                _video.height = newHeight;
+                _video.width = newHeight*prop;
+            }
         }
     }
 
     private function onAddedToStage(e:Event):void{
+
+        _currentVideoSize = new Rectangle(0,0,stage.stageWidth, stage.stageHeight);
+        setVideoSize(_currentVideoSize.width, _currentVideoSize.height);
+
         stage.addEventListener(FullScreenEvent.FULL_SCREEN, fullScreenRedraw);
+        stage.addEventListener(Event.RESIZE, onStageResize);
     }
 
     private function onRemovedFromStage(e:Event):void{
         stage.removeEventListener(FullScreenEvent.FULL_SCREEN, fullScreenRedraw);
+        stage.removeEventListener(Event.RESIZE, onStageResize);
+    }
+
+    private function onStageResize(event:Event):void {
+        _currentVideoSize = new Rectangle(0,0,stage.stageWidth, stage.stageHeight);
+        setVideoSize(_currentVideoSize.width, _currentVideoSize.height);
+
+        screenRotation(_video.rotation);
     }
 
     private function _onTimerHanlder(event:TimerEvent):void {
@@ -105,11 +134,11 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
     private function startStream(url:String):void{
 
         if(_attachedStram != null){
-            _attachedStram.destoy();
+            _attachedStram.destroy();
         }
 
         var stream:VideoStream = new VideoStream();
-        stream.setCallback(_streamStartPlay, _streamStopPlay);
+        stream.setCallback(_streamStartPlay, _streamStopPlay, _onMetaDataRecieved);
         stream.startStream(url);
         _attachedStram = stream;
         _video.attachNetStream(_attachedStram.getStream());
@@ -121,9 +150,17 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
         }else{
             _hud.playing();
         }
+
+    }
+
+    private function _onMetaDataRecieved():void {
+        _currentVideoSize = new Rectangle(0,0,stage.stageWidth, stage.stageHeight);
+        setVideoSize(_currentVideoSize.width, _currentVideoSize.height);
     }
 
     private function _streamStopPlay():void {
+        _hud.finish();
+
 
     }
 
@@ -170,9 +207,17 @@ public class VideoPlayer extends Sprite implements IVideoPlayer{
         _container.x = 0;
         _container.y = 0;
 
+        _container.scaleX = _container.scaleY = 1;
+
+        var scalex:Number = _currentVideoSize.width / _container.width;
+        var scaley:Number = _currentVideoSize.height / _container.height;
+
+        var scale:Number = _container.scaleX = _container.scaleY = Math.min(scalex, scaley);
+
         var containerBounds:Rectangle = _container.getBounds(_container);
-        _container.x -= containerBounds.x;
-        _container.y -= containerBounds.y;
+        _container.x -= containerBounds.x * scale;
+        _container.y -= containerBounds.y * scale;
+
     }
 }
 }

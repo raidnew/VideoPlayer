@@ -8,6 +8,7 @@
 package Data {
 import flash.events.NetStatusEvent;
 import flash.events.SecurityErrorEvent;
+import flash.geom.Rectangle;
 import flash.media.SoundTransform;
 import flash.net.NetConnection;
 import flash.net.NetStream;
@@ -17,12 +18,13 @@ public class VideoStream {
     private var _stream:NetStream;
     private var _connection:NetConnection;
     private var _streamURL:String;
-    private var _client:StreamClient;
     private var _onStopCallBack:Function;
     private var _onStartCallBack:Function;
+    private var _onMetaStreamCallback:Function;
+
+    private var _info:Object;
 
     public function VideoStream() {
-        _initNetConnection();
     }
 
     private function _initNetConnection():void{
@@ -65,16 +67,15 @@ public class VideoStream {
     }
 
     private function _connectStream():void {
-        _client = new StreamClient();
-
         _stream = new NetStream(_connection);
         _stream.addEventListener(NetStatusEvent.NET_STATUS, _netStatusHandler);
-        _stream.client = _client;
+        _stream.client = this;
         _stream.play(_streamURL);
     }
 
     public function startStream(url:String):void{
         _streamURL = url;
+        destroy();
         _initNetConnection();
     }
 
@@ -86,28 +87,27 @@ public class VideoStream {
         return _stream.time;
     }
 
-    public function getDuration():Number {
-        return _client.getDuration();
-    }
-
     public function getBuffered():Number {
         return _stream.bytesLoaded/_stream.bytesTotal;
     }
 
-    public function destoy():void {
+    public function destroy():void {
+        if(_stream != null){
+            _stream.removeEventListener(NetStatusEvent.NET_STATUS, _netStatusHandler);
+            _stream.close();
+        }
 
-        _stream.removeEventListener(NetStatusEvent.NET_STATUS, _netStatusHandler);
-
-        _connection.removeEventListener(NetStatusEvent.NET_STATUS, _netStatusHandler);
-        _connection.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, _securityErrorHandler);
-
-        _stream.close();
-        _connection.close();
+        if(_connection != null){
+            _connection.removeEventListener(NetStatusEvent.NET_STATUS, _netStatusHandler);
+            _connection.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, _securityErrorHandler);
+            _connection.close();
+        }
     }
 
-    public function setCallback(callbackStart:Function, callbackStop:Function):void {
+    public function setCallback(callbackStart:Function, callbackStop:Function, callbackMeta:Function):void {
         _onStartCallBack = callbackStart;
         _onStopCallBack = callbackStop;
+        _onMetaStreamCallback = callbackMeta;
     }
 
     public function setVolume(volume:Number):void{
@@ -118,6 +118,36 @@ public class VideoStream {
 
     public function getVolume():Number{
         return _stream.soundTransform.volume;
+    }
+
+    public function getScreenSize():Rectangle {
+        return getSize();
+
+    }
+
+    public function onMetaData(info:Object):void {
+        _info = info;
+        _onMetaStreamCallback();
+        //trace("onMetaData: duration=" + info.duration + " width=" + info.width + " height=" + info.height + " framerate=" + info.framerate);
+    }
+
+    public function onCuePoint(info:Object):void {
+        //trace("onCuePoint: time=" + info.time + " name=" + info.name + " type=" + info.type);
+    }
+
+    public function onPlayStatus(info:Object):void {
+        //trace("onPlayStatus: time=" + info.time + " name=" + info.name + " type=" + info.type);
+    }
+
+    public function getDuration():Number {
+        return _info.duration;
+    }
+
+    public function getSize():Rectangle {
+        if(_info == null){
+            return null;
+        }
+        return new Rectangle(0,0,_info.width, _info.height);
     }
 }
 }
